@@ -1,4 +1,4 @@
-######## ONLY RUN THIS SCRIPT THE FIRST TIME USING THIS CODE ON YOUR COMPUTERS #####
+
 
 # Project: dropitlikeitsCOP
 # Script: 00_setup
@@ -8,7 +8,7 @@
 
 # Instructions:
 
-
+######## ONLY RUN THESE STEPS THE FIRST TIME USING THIS CODE ON YOUR COMPUTERS #####
 ## Install Packages
 
 #From CRAN
@@ -20,6 +20,13 @@ remotes::install_github("USAID-OHA-SI/glamr", build_vignettes = TRUE)
 remotes::install_github("USAID-OHA-SI/gophr", build_vignettes = TRUE)
 remotes::install_github("USAID-OHA-SI/glitr", build_vignettes = TRUE)
 
+# Create standard folder structure from glamr
+si_setup()
+
+# Add raw data to the Data folder
+# This step needs to be done physically, outside of R
+
+########  RUN THIS SET EVERY TIME YOU START RSTUDIO #####
 
 ## Load Packages
 
@@ -31,12 +38,3 @@ library(janitor)
 library(glamr)
 library(gophr)
 library(glitr)
-
-
-
-
-# Create standard folder structure from glamr
-si_setup()
-
-# Add raw data to the Data folder
-# This step needs to be done physically, outside of R
