@@ -12,13 +12,14 @@
 ## Install Packages
 
 #From CRAN
-install.packages(c("tidyverse","readxl","reshape2", "janitor"))
+install.packages(c("tidyverse","readxl","reshape2", "janitor","purr"))
 
 #From GitHub
 install.packages("remotes")
 remotes::install_github("USAID-OHA-SI/glamr", build_vignettes = TRUE)
 remotes::install_github("USAID-OHA-SI/gophr", build_vignettes = TRUE)
 remotes::install_github("USAID-OHA-SI/glitr", build_vignettes = TRUE)
+remotes::install_github("USAID-OHA-SI/tameDP", build_vignettes = TRUE)
 
 # Create standard folder structure from glamr
 si_setup()
@@ -38,3 +39,5 @@ library(janitor)
 library(glamr)
 library(gophr)
 library(glitr)
+library(tameDP)
+library(purrr)
