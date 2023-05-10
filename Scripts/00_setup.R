@@ -16,7 +16,8 @@ install.packages(c("tidyverse","readxl","reshape2", "janitor","purr"))
 
 #From GitHub
 install.packages("remotes")
-remotes::install_github("USAID-OHA-SI/glamr", build_vignettes = TRUE)
+library(remotes)
+remotes::install_github("USAID-OHA-SI/glamr")
 remotes::install_github("USAID-OHA-SI/gophr", build_vignettes = TRUE)
 remotes::install_github("USAID-OHA-SI/glitr", build_vignettes = TRUE)
 remotes::install_github("USAID-OHA-SI/tameDP", build_vignettes = TRUE)

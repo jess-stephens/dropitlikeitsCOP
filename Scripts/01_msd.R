@@ -18,14 +18,30 @@ df_indicators<-df_reshape %>%
            trendscoarse, sex,  period, period_type, value)) 
   
 df_rows<-df_indicators %>% 
-  filter(period_type!="results",
+  filter(period_type=="cumulative",
          period=="FY22")
 
-indicators<-unique(df_rows$indicator)
+# collapse by snu trends
+df_snu<- df_rows %>% 
+  select(!c(psnu, period_type)) %>% 
+  dplyr::group_by_if(is.character) %>%
+  dplyr::summarise_if(is.numeric, ~ sum(., na.rm = TRUE))%>% 
+  rename(value_snu1=value)
 
+df_psnu<-df_rows %>% 
+  rename(value_psnu=value) %>% 
+  select(!c(period_type)) 
+  
 
-
-
+#join back
+df_wide<- left_join(
+  df_psnu, df_snu)
+  
+df_ratio<-df_wide %>% 
+  mutate(FY22_ratios=value_psnu/value_snu1) %>% 
+  select(!c(period))
 
 
 today <- lubridate::today()
+
+write_csv(df_ratio, glue::glue("Dataout/df_msd_ratio_{today}.csv" ))
