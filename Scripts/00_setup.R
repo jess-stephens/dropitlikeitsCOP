@@ -1,5 +1,3 @@
-
-
 # Project: dropitlikeitsCOP
 # Script: 00_setup
 # Developers: Jessica Stephens (USAID), LaChandra Spencer (CDC)
@@ -12,7 +10,7 @@
 ## Install Packages
 
 #From CRAN
-install.packages(c("tidyverse","readxl","reshape2", "janitor","purr"))
+install.packages(c("tidyverse","readxl","reshape2", "janitor","purr", "getPass"))
 
 #From GitHub
 install.packages("remotes")
@@ -36,6 +34,7 @@ library(tidyverse)
 library(readxl)
 library(reshape2)
 library(janitor)
+library(getPass)
 
 library(glamr)
 library(gophr)

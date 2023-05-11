@@ -5,11 +5,12 @@ data_folder <- "C:/Users/jstephens/Documents/Zim/COP23/dropitlikeitsCOP/Data"
 
 
 
-
 psnu <- data_folder %>% 
   return_latest("PSNUxIM")
 
 dp <- tame_dp(psnu, type="PSNUxIM")
+
+
 names(dp)
 
 #match to IP names from DATIM
@@ -31,8 +32,9 @@ dp_period <- dp_indicators %>%
   mutate(fiscal_year = as.character(fiscal_year)) %>% 
   mutate(fiscal_year = "FY24Q4") %>%
   mutate(period_type="targets") %>% 
-  rename(period=fiscal_year, value=targets)
-         
+  rename(period=fiscal_year, value=targets) %>% 
+  select(!c(numeratordenom))
+
 
 # rename psnu to snu1
 #change ageasentered to coarse trends
@@ -43,7 +45,7 @@ dp_munge<-dp_period %>%
     mutate(trendscoarse=ifelse(
     ageasentered %in%  c("01-09","02 - 12 Months", "<=02 Months", "<15","<01",
                          "01-04","05-09","10-14"),
-                            "<15", "15+")) %>% 
+                            "<15", "15+"))%>% 
   select(!c(ageasentered,period, period_type))
 
 # collapse by coarse trends
