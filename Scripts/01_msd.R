@@ -18,7 +18,7 @@ tst_indicators <- data_folder %>%
 
 otherdisag <- data_folder %>% 
   return_latest("tst_disags_mapping.xlsx") %>% 
-  read_excel(sheet="otherdisag")
+  read_excel(sheet="otherdisag", na="NA")
 
 age_map <- data_folder %>% 
   return_latest("age_mapping.xlsx") %>% 
@@ -47,6 +47,11 @@ df_rows_nd<-df_rows %>%
   mutate(indicator=if_else(numeratordenom=="D", paste(indicator,numeratordenom, sep = "_"), indicator)) %>% 
   select(!c(numeratordenom))
 
+# standard1<-df_rows_nd %>% 
+#   filter(indicator=="TX_TB_D") %>% 
+#     distinct(indicator,standardizeddisaggregate, otherdisaggregate)
+
+
 # #mutate age bands
 # df_age_adj <- df_filtered %>% 
 #   left_join(age_map, by = c("indicator", "ageasentered" = "age_msd")) %>% 
@@ -62,27 +67,91 @@ tst_indicator_list<-df_rows_nd %>%
   filter(!is.na(FY24)) %>% 
   select(!c("standardizeddisaggregate"))%>% 
   rename(standardizeddisaggregate=FY24) 
+# unique(tst_indicator_list$standardizeddisaggregate)
+# unique(tst_indicator_list$otherdisaggregate)
 
 
-########################STUCK###############################################
+#########################################################################
 #map to TST other disaggregrates
-tst_otherdisag<-tst_indicator_list %>% 
-  left_join(otherdisag, by=c("indicator", "otherdisaggregate"="MSD"), multiple = "all")
+#########################################################################
+# Collapse across standdardized disaggregates to removed otherdisaggregates
+# #can change otherdisaggregate to na then group all afterwards
+# CXCA_SCRN
+# HTS_RECENT
+# HTS_SELF
+# 
+# # Select other disaggregate =  NA
+# HTS_INDEX 
+# VMMC_CIRC
+# #check modalities below when doing this
+# HTS_TST
+# HTS_TST_POS
+
+# # Select other disaggregate !=  Recent
+# PMTCT_STAT
+# 
+# # Select other disaggregate =  Routine
+# TX_PVLS
+# TX_PVLS_D
+
+# matches fine, no changes
+# OVC_SERV
+# PMTCT_ART
+# PMTCT_STAT_D
+# PMTCT_EID
+# PP_PREV
+# Prep_CT
+# PREP_NEW
+# TB_ART
+# TB_PREV
+# TB_PREV_D
+# TB_STAT
+# TB_STAT_D
+# TX_CURR
+# TX_NEW
+# TX_TB_D
 
 
+tst_otherdisag <- tst_indicator_list %>% 
+  mutate(otherdisaggregate = case_when(
+    indicator=="CXCA_SCRN"~NA,
+    indicator=="HTS_RECENT"~NA,
+    indicator=="HTS_SELF"~NA,
+      grepl("Already", otherdisaggregate) ~ "Already",
+    grepl("New", otherdisaggregate) ~ "New",
+    otherdisaggregate == "Known at Entry" ~ "Known",
 
-other<-tst_indicator_list %>% distinct(indicator,standardizeddisaggregate, otherdisaggregate)
+    TRUE ~ otherdisaggregate
+  )) %>% 
+  filter(!(indicator=="HTS_INDEX" & !is.na(otherdisaggregate)), 
+         !(indicator=="VMMC_CIRC" & !is.na(otherdisaggregate)), 
+         !(indicator=="HTS_TST" & !is.na(otherdisaggregate)),
+         !(indicator=="HTS_TST_POS" & !is.na(otherdisaggregate)), 
+         !(indicator=="PMTCT_STAT" & (otherdisaggregate=="Recent")), 
+         !(indicator=="TX_PVLS" & (otherdisaggregate=="Targeted")),
+         !(indicator=="TX_PVLS_D" & (otherdisaggregate=="Targeted")) 
+  )
+
+# other_psnu<-dp_munge %>% distinct(indicator,standardizeddisaggregate,otherdisaggregate)
+ # other2<-tst_otherdisag %>% distinct(indicator, standardizeddisaggregate, otherdisaggregate)
+
+tst_otherdisag_group<-tst_otherdisag %>% 
+  dplyr::group_by_if(is.character) %>%
+  dplyr::summarise_if(is.numeric, ~ sum(., na.rm = TRUE)) %>% 
+  ungroup()
+
+
 ##########################################################################
 
 
 # collapse by snu trends
-df_snu<- tst_indicator_list %>% 
-  select(!c(psnu, period_type)) %>% 
+df_snu<- tst_otherdisag_group %>% 
+  dplyr::select(!c(psnu, period_type)) %>% 
   dplyr::group_by_if(is.character) %>%
   dplyr::summarise_if(is.numeric, ~ sum(., na.rm = TRUE))%>% 
   rename(value_snu1=value)
 
-df_psnu<-tst_indicator_list %>% 
+df_psnu<-tst_otherdisag_group %>% 
   rename(value_psnu=value) %>% 
   select(!c(period_type)) 
   
@@ -104,14 +173,6 @@ align<-df_ratio_stdev %>%
   unique()
 
 
-# df_stdev_names<-df_ratio_stdev %>% 
-#   mutate(standardizeddisaggregate=
-#            case_when(
-#              indicator=="CXCA_SCRN"~ "Age/Sex/HIVStatus",
-#              indicator=="HTS_INDEX"~"Age/Sex/Result",
-#              indicator=="HTS_RECENT"~"Age/Sex/HIVStatus",
-#              
-#               standardizeddisaggregate))
 
 
 today <- lubridate::today()

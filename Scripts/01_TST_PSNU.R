@@ -53,7 +53,16 @@ dp_collapse<- dp_munge %>%
   dplyr::group_by_if(is.character) %>%
   dplyr::summarise_if(is.numeric, ~ sum(., na.rm = TRUE)) 
 
-
-
+# 
+# unique(dp_collapse$standardizeddisaggregate)
+# unique(dp_collapse$otherdisaggregate)
+# 
+other_indicators<- dp_collapse %>%
+  filter(is.na(otherdisaggregate))%>%
+  distinct(indicator)
+# 
+# standard<-dp_collapse %>% 
+#   # select(c(indicator, standardizeddisaggregate)) %>% 
+#     distinct(indicator,standardizeddisaggregate)
 
 
