@@ -1,17 +1,22 @@
+# Project: dropitlikeitsCOP
+# Script: 01_TST_PSNU
+# Developers: Jessica Stephens (USAID)
+# Use: to munge the TST by age to align with MSD coarse:  
 
+#IMPORT ------------------------------------------------------------------------
 
+# IMPORT DATA: TST
 
 data_folder <- "C:/Users/jstephens/Documents/Zim/COP23/dropitlikeitsCOP/Data"
-
-
 
 psnu <- data_folder %>% 
   return_latest("PSNUxIM")
 
 dp <- tame_dp(psnu, type="PSNUxIM")
 
-
 names(dp)
+
+#MUNGE ------------------------------------------------------------------------
 
 #match to IP names from DATIM
 datim_user_nm <- "jstephens@usaid.gov" 
@@ -40,7 +45,7 @@ dp_period <- dp_indicators %>%
 #change ageasentered to coarse trends
 
 dp_munge<-dp_period %>% 
-  rename(snu1=psnu, FY23_target_snu=value)  %>% 
+  rename(snu1=psnu, FY24_target_snu=value)  %>% 
   filter(!is.na(ageasentered)) %>% 
     mutate(trendscoarse=ifelse(
     ageasentered %in%  c("01-09","02 - 12 Months", "<=02 Months", "<15","<01",
@@ -51,18 +56,21 @@ dp_munge<-dp_period %>%
 # collapse by coarse trends
 dp_collapse<- dp_munge %>% 
   dplyr::group_by_if(is.character) %>%
-  dplyr::summarise_if(is.numeric, ~ sum(., na.rm = TRUE)) 
+  dplyr::summarise_if(is.numeric, ~ sum(., na.rm = TRUE)) %>% 
+  ungroup()
 
-# 
-# unique(dp_collapse$standardizeddisaggregate)
-# unique(dp_collapse$otherdisaggregate)
-# 
-other_indicators<- dp_collapse %>%
-  filter(is.na(otherdisaggregate))%>%
-  distinct(indicator)
-# 
-# standard<-dp_collapse %>% 
-#   # select(c(indicator, standardizeddisaggregate)) %>% 
-#     distinct(indicator,standardizeddisaggregate)
+#CHECK ------------------------------------------------------------------------
+# COMPARE TO MSD (ALIGN IN 01_MSD.R)
 
+# align_dp<-dp_collapse %>%
+#   select(c(indicator, standardizeddisaggregate, otherdisaggregate)) %>%
+#   unique()
+
+
+#EXPORT ------------------------------------------------------------------------
+
+
+today <- lubridate::today()
+
+write_csv(dp_collapse, glue::glue("Dataout/dp_collapse_{today}.csv" ))
 
