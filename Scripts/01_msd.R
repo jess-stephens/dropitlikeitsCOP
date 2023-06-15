@@ -33,6 +33,11 @@ age_map <- data_folder %>%
 
 #reshape long
 df_reshape<- reshape_msd(df, qtrs_keep_cumulative = TRUE)
+names(df_reshape)
+
+# test<-df_reshape %>%
+#     distinct(prime_partner_name, mech_code,mech_name)
+
 
 #minimize size
 ##select necessary indicators
@@ -154,14 +159,14 @@ tst_otherdisag_group<-tst_otherdisag %>%
 
 # collapse by snu trends
 df_snu<- tst_otherdisag_group %>% 
-  dplyr::select(!c(psnu, period_type)) %>% 
+  dplyr::select(!c(psnu, period_type, modality)) %>% 
   dplyr::group_by_if(is.character) %>%
   dplyr::summarise_if(is.numeric, ~ sum(., na.rm = TRUE))%>% 
   rename(value_snu1=value)
 
 df_psnu<-tst_otherdisag_group %>% 
-  rename(value_psnu=value) %>% 
-  select(!c(period_type)) 
+  rename(value_psnu=value) 
+
 
 ##############################################################
 # JOIN SNU COLUMN BACK TO DF_PSNU
@@ -171,13 +176,8 @@ df_wide<- left_join(
   
 # CALCULATE RATIO OF PSNU TO SNU
 
-df_ratio<-df_wide %>% 
-  mutate(FY22_ratios=value_psnu/value_snu1) %>% 
-  select(!c(period))
-
 df_ratio_stdev<-df_wide %>% 
-  mutate(FY22_ratios=value_psnu/value_snu1) %>% 
-  select(!c(modality))
+  mutate(FY22_ratios=value_psnu/value_snu1) 
 
 #CHECK ------------------------------------------------------------------------
 # COMPARE TO DP_COLLAPSE (ALIGN_DP IN 01_TST_PSNU.R)
@@ -186,8 +186,11 @@ df_ratio_stdev<-df_wide %>%
 #   select(c(indicator, standardizeddisaggregate, otherdisaggregate)) %>%
 #   unique()
 
+# unique(df_msd$prime_partner_name)
+
+
 #EXPORT ------------------------------------------------------------------------
 
-today <- lubridate::today()
-
-write_csv(df_ratio_stdev, glue::glue("Dataout/df_msd_ratio_stdev_{today}.csv" ))
+ today <- lubridate::today()
+ 
+ write_csv(df_ratio_stdev, glue::glue("Dataout/df_msd_ratio_stdev_{today}.csv" ))

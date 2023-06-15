@@ -14,7 +14,7 @@ psnu <- data_folder %>%
 
 dp <- tame_dp(psnu, type="PSNUxIM")
 
-names(dp)
+# names(dp)
 
 #MUNGE ------------------------------------------------------------------------
 
@@ -51,7 +51,7 @@ dp_munge<-dp_period %>%
     ageasentered %in%  c("01-09","02 - 12 Months", "<=02 Months", "<15","<01",
                          "01-04","05-09","10-14"),
                             "<15", "15+"))%>% 
-  select(!c(ageasentered,period, period_type))
+  select(!c(ageasentered,period, period_type, modality))
 
 # collapse by coarse trends
 dp_collapse<- dp_munge %>% 
@@ -62,10 +62,11 @@ dp_collapse<- dp_munge %>%
 #CHECK ------------------------------------------------------------------------
 # COMPARE TO MSD (ALIGN IN 01_MSD.R)
 
-# align_dp<-dp_collapse %>%
+# dp_collapse<-df_dp_tst %>%
 #   select(c(indicator, standardizeddisaggregate, otherdisaggregate)) %>%
 #   unique()
 
+# unique(df_dp_tst$prime_partner_name)
 
 #EXPORT ------------------------------------------------------------------------
 
@@ -73,4 +74,5 @@ dp_collapse<- dp_munge %>%
 today <- lubridate::today()
 
 write_csv(dp_collapse, glue::glue("Dataout/dp_collapse_{today}.csv" ))
+
 
