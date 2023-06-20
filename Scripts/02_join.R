@@ -38,49 +38,53 @@ names(df_kp_snu_join)
 df_tst_kp<- df_dp_tst %>% 
   left_join(df_kp_snu_join)
 
-#what are the partner names in the tst
-df_tst_kp %>%
-  select(c(prime_partner_name)) %>%
-  unique()
+# df_tst_kp_check<-df_tst_kp %>%
+#   mutate(qc=ifelse(FY24_target_snu<fy24_target_snu_kp, TRUE, FALSE)) %>% 
+#   count(qc)
+#there are 59 cases out of >1800 where the kp target is larger than the snu target
 
 
-test2<-df_kp_snu_join %>%
-  select(c(indicator, standardizeddisaggregate)) %>%
-  unique()
 
-# 1 BANTWANA ZIMBABWE                                           
-# 2 Centre for Sexual Health and HIV/AIDS Research Zimbabwe     
-# 3 Dedup                                                       
-# 4 FAMILY AIDS CARING TRUST                                    
-# 5 Hospice and Palliative Care Association of Zimbabwe         
-# 6 Mavambo Orphan Care                                         
-# 7 ORGANIZATION FOR PUBLIC HEALTH INTERVENTIONS AND DEVELOPMENT
-# 8 TBD (000000000)                                             
-# 9 ZIMBABWE ASSOCIATION OF CHURCH RELATED HOSPITAL             
-# 10 Zimbabwe Health Interventions   
+#PWID AND PRISONS == MALE???
+#DONT KNOW HOW TO TELL APART THE TBD MECHS IN TST
+# df_msd %>%
+#   filter(prime_partner_name=="Population Services International" | prime_partner_name=="UNIVERSITY OF WASHINGTON") %>% 
+#   select(c(prime_partner_name, psnu)) %>%
+#   unique() %>% 
+#   print(n = 46)
 
 
 #SUBTRACT KP FROM PLHIV TARGETS AT SNU LEVEL
 
-# non- ace  / ophid, kp tx_curr taget for gp Tx_curr
+# non- ace  / ophid, kp tx_curr taRget for gp Tx_curr
 # else == tx_curr ace / ophid and all other indicators
 
 df_tst_kp_gp<-df_tst_kp %>% 
   mutate(fy24_target_gp=case_when(
     indicator=="TX_CURR" & 
-    prime_partner_name!="ORGANIZATION FOR PUBLIC HEALTH INTERVENTIONS AND DEVELOPMENT"
-    ~ fy24_target_snu_kp, 
-    # indicator=="TX_CURR" & 
-    #   prime_partner_name!="ACE" <<<<<<<<<<<<<<<<< need proper name
-    # ~ fy24_target_snu_kp, 
+    !(prime_partner_name %in% c("ORGANIZATION FOR PUBLIC HEALTH INTERVENTIONS AND DEVELOPMENT",
+                               "Zimbabwe Health Interventions"))
+    ~ fy24_target_snu_kp,
     TRUE~ (FY24_target_snu - fy24_target_snu_kp)
-  ))
+  )) %>% 
+  filter(!is.na(fy24_target_gp))
+#161 obs
 
 #MSD JOIN ----------------------------------------------------------------------
-df_tst_kp_msd<- df_tst_kp_gp %>% 
-  left_join(df_msd)
+# need to left join to a psnu msd the snu tst kp many to one
 
-allocate fy24_target_gp based on historical results - df_ratio_stdev 
+df_tst_kp_msd<- df_msd %>% 
+  left_join(df_tst_kp_gp) %>% 
+  filter(!is.na(fy24_target_gp))
+#346 obs
+
+#allocate fy24_target_gp based on historical results - df_ratio_stdev
+df_target_psnu<-df_tst_kp_msd %>% 
+  mutate(fy24_target_gp_psnu=fy24_target_gp*FY22_ratios)
+
+#JOIN THE KP PSNU TARGETS TO THE PSNU MSD PRIOR TO TAKING GP TO PSNU
+# COMBINE THE RATIOS OF THE KP PSNU / SNU BEFORE BACKING OUT (INVERSE KP RATIOS?)
+
 # (ophid / ace / cdc - zimtec)
 allocate fy24_target_snu based on df_kp_ratio
 
@@ -98,33 +102,6 @@ allocate fy24_target_snu based on df_kp_ratio
 # PSNU2 KP=10 KP CONTRIBUTION =.1
 # PSNU3 KP=80 KP CONTRIBUTION =.8 
 
-
-
-
-
-
-#JOIN ------------------------------------------------------------------------
-#need to subtract KP SNU targets from df_dp_tst before this join
-
-#JOIN FY24 TST GP TARGETS TO MSD FY22 RATIOS & APPLY
-
-#CHECK IP NAMES ACROSS YEARS AND FIX
-
-# replace dp collapse with df_psnu_tst_gp after kp removal from plhiv targets
-#replace FY24_target_snu with fy24_target_gp after kp removal from plhiv targets
-df_psnu_tst<- left_join(
-  dp_collapse, df_ratio, 
-  multiple="all") %>% 
-  # select(prime_partner_name, snu1, psnu, indicator, indicatortype, numeratordenom, 
-  #        standardizeddisaggregate, otherdisaggregate, modality, sex, trendscoarse, 
-  #        FY22_ratios, FY23_target_snu) %>% 
-  select(prime_partner_name, snu1, indicator, indicatortype,
-         standardizeddisaggregate,  otherdisaggregate, sex, trendscoarse,
-         FY22_ratios, FY24_target_snu) %>%
-  mutate(FY24_target_psnu=FY24_target_snu * FY22_ratios) 
-
-
-df_ratio_stdev
 
 
 #EXPORT ------------------------------------------------------------------------

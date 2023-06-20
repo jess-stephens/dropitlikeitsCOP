@@ -24,40 +24,29 @@ df_kp_clean <- df_kp %>%
   clean_names() %>% 
   rename(prime_partner_name=partner,snu1=province, psnu=district, 
          standardizeddisaggregate=disaggregate, FY24_target_kp=target)
-  
-  
-# unique(df_kp$partner)
 
-# mutate(mech_number=case_when((
-#   partner=="Bantwana" ~ " ",
-#   partner=="ZHI RISE"~,
-#   partner=="CesHHAR"~"",
-#   partner=="Prevent"~"",
-#   partner=="ZHI ACCE"~"",
-#   partner=="OPHID"~"",
-#   partner=="CLINICAL IP TBD"~"",
-#   partner=="Mavambo"~"",
-#   partner=="ZACH"~"",
-#   partner=="FACT SPACE 4 OVC"~"",
-#   partner=="FACT SMART Girls"~"",
-#   partner=="DREAMS IP TBD"~"",
-#   partner=="HOSPAZ"~"",
-#   partner=="OU"~"",
-#   
-# )))
+# CLEAN PARTNER NAMES TO MATCH MSD FY22
 
+df_kp_clean2<-df_kp_clean %>% 
+  mutate(prime_partner_name=case_when(
+    prime_partner_name=="CesHHAR"~ "Centre for Sexual Health and HIV/AIDS Research Zimbabwe",
+    prime_partner_name=="Mavambo"~ "Mavambo Orphan Care",
+    prime_partner_name=="OPHID"~ "ORGANIZATION FOR PUBLIC HEALTH INTERVENTIONS AND DEVELOPMENT",
+    prime_partner_name=="Prevent"~ "Population Services International",
+    prime_partner_name=="CLINICAL IP TBD"~ "UNIVERSITY OF WASHINGTON",
+    prime_partner_name=="ZACH"~ "ZIMBABWE ASSOCIATION OF CHURCH RELATED HOSPITAL",
+    prime_partner_name=="ZHI ACCE"~ "Zimbabwe Health Interventions",
+    TRUE~prime_partner_name))
 
 #MUNGE ------------------------------------------------------------------------
 
-may need to check age = NA
-
 #change ageasentered to coarse trends
-df_kp_munge<-df_kp_clean %>% 
-  filter(!is.na(age)) %>% 
+df_kp_munge<-df_kp_clean2 %>% 
   mutate(trendscoarse=ifelse(
     age %in%  c("1-4","5-9", "<1", "10-14","<01"),
     "<15", "15+"))%>% 
   select(!c(age)) 
+
 
 #remove kp type from prep_ct and prep_new in order to collapse
 #drop pp_prev HIV+ - just keep na
@@ -85,32 +74,47 @@ df_kp_munge2<-df_kp_munge %>%
 #   select(c(indicator, standardizeddisaggregate)) %>%
 #   unique()
 
+df_kp_munge3<-df_kp_munge2 %>% 
+  mutate(sex=case_when(
+    standardizeddisaggregate %in%  c("MSM","TG")~    "Male",
+    standardizeddisaggregate=="FSW"~  "Female",
+    standardizeddisaggregate=="PWID"~  "Male",
+    standardizeddisaggregate=="People in prisons and other enclosed settings"~  "Male",
+    indicator=="GEND_GBV"~  "Female",
+    TRUE~sex))
+
 # collapse by coarse trends
-df_kp_munge_collapse<- df_kp_munge2 %>% 
+# df_kp_munge_collapse<- df_kp_munge3 %>% 
+#   dplyr::group_by_if(is.character) %>%
+#   dplyr::summarise_if(is.numeric, ~ sum(., na.rm = TRUE)) %>% 
+#   ungroup() %>% 
+# view()
+
+df_kp_munge_collapse<- df_kp_munge3 %>% 
+  select(!standardizeddisaggregate) %>% 
   dplyr::group_by_if(is.character) %>%
   dplyr::summarise_if(is.numeric, ~ sum(., na.rm = TRUE)) %>% 
-  ungroup() %>% 
-view()
-
-# align_kp<-df_kp_munge2 %>%
-#   select(c(indicator, standardizeddisaggregate)) %>%
-#   unique()
-
+  ungroup()
 
 ##############################################################
-# CREATE SECONDARY DF BY SNU TO JOIN TO PSNU DF
+# CREATE SECONDARY DF BY SNU ( MAY JOIN TO PSNU DF for realignment)
 
 # collapse by snu trends
 df_kp_snu<- df_kp_munge_collapse %>% 
-  dplyr::select(!c(psnu)) %>% 
+  dplyr::select(!c(psnu, agency)) %>% 
   dplyr::group_by_if(is.character) %>%
   dplyr::summarise_if(is.numeric, ~ sum(., na.rm = TRUE))%>% 
-  rename(fy24_target_snu_kp=FY24_target_kp)
+  rename(fy24_target_snu_kp=FY24_target_kp) %>% 
+  ungroup()
 
+# rename target in psnu file 
 df_kp_psnu<-df_kp_munge_collapse %>% 
   rename(fy24_target_psnu_kp=FY24_target_kp)
 
+
 ##############################################################
+# SHOULD NEED THIS FOR RE-ALIGNMENT OF KP INDICATORS
+# MAY ALSO NEED KP TYPE / ST DEV BACK
 # JOIN SNU COLUMN BACK TO DF_PSNU
 
 df_kp_wide<- left_join(
@@ -118,26 +122,20 @@ df_kp_wide<- left_join(
 
 # CALCULATE RATIO OF PSNU TO SNU
 
-df_kp_ratio<-df_wide %>% 
+df_kp_ratio<-df_kp_wide %>% 
   mutate(fy24_ratios_kp=fy24_target_psnu_kp/fy24_target_snu_kp)
 
 
 
-##############################################################
-#REJOIN SNU VALUES TO PSNU DATA
-df_kp_snu_join<-df_kp_ratio %>% 
-  select(!c(psnu, agency, fy24_target_psnu_kp))
 
-##############################################################
-CLEAN PARTNER NAMES
 
 #EXPORT ------------------------------------------------------------------------
 
 today <- lubridate::today()
   
-write_csv(df_kp_snu_join, glue::glue("Dataout/df_kp_snu_join_{today}.csv" ))
+write_csv(df_kp_snu, glue::glue("Dataout/df_kp_snu_join_{today}.csv" ))
 
-write_csv(df_kp_ratio, glue::glue("Dataout/df_kp_ratio_{today}.csv" ))
+# write_csv(df_kp_ratio, glue::glue("Dataout/df_kp_ratio_{today}.csv" ))
   
   
   

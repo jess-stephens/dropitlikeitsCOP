@@ -25,7 +25,7 @@ dp_names <- get_names(dp, datim_user = datim_user_nm, datim_password = datim_pwd
 
 
 dp_indicators<-dp_names %>% 
-  select(c( prime_partner_name, psnu,indicator,indicatortype, numeratordenom, 
+  select(c( prime_partner_name, psnu,indicator, numeratordenom, 
             standardizeddisaggregate, otherdisaggregate,modality,
             ageasentered, sex,  fiscal_year, targets)) 
 

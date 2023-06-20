@@ -9,7 +9,7 @@ data_folder <- "C:/Users/jstephens/Documents/Zim/COP23/dropitlikeitsCOP/Data"
 
 #IMPORT ------------------------------------------------------------------------
 
-df<-read_psd("Data/MER_Structured_Datasets_PSNU_IM_FY21-23_20230210_v1_1_Zimbabwe.txt")
+df<-read_psd("dropitlikeitsCOP/Data/MER_Structured_Datasets_PSNU_IM_FY21-23_20230210_v1_1_Zimbabwe.txt")
 
 msd_disagg_map <- data_folder %>% 
   return_latest("msd_disagg_mapping.xlsx") %>% 
@@ -42,7 +42,7 @@ names(df_reshape)
 #minimize size
 ##select necessary indicators
 df_indicators<-df_reshape %>% 
-  select(c( prime_partner_name, snu1, psnu,indicator, indicatortype, numeratordenom, 
+  select(c( prime_partner_name, snu1, psnu,indicator, numeratordenom, 
            standardizeddisaggregate, otherdisaggregate,modality,
            trendscoarse, sex,  period, period_type, value)) 
 ## select necessary rows
@@ -165,6 +165,7 @@ df_snu<- tst_otherdisag_group %>%
   rename(value_snu1=value)
 
 df_psnu<-tst_otherdisag_group %>% 
+  dplyr::select(!c( period_type, modality)) %>% 
   rename(value_psnu=value) 
 
 
@@ -177,7 +178,8 @@ df_wide<- left_join(
 # CALCULATE RATIO OF PSNU TO SNU
 
 df_ratio_stdev<-df_wide %>% 
-  mutate(FY22_ratios=value_psnu/value_snu1) 
+  mutate(FY22_ratios=value_psnu/value_snu1) %>% 
+  select(!c(value_psnu, value_snu1, period))
 
 #CHECK ------------------------------------------------------------------------
 # COMPARE TO DP_COLLAPSE (ALIGN_DP IN 01_TST_PSNU.R)
