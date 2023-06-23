@@ -44,7 +44,13 @@ names(df_reshape)
 df_indicators<-df_reshape %>% 
   select(c( prime_partner_name, snu1, psnu,indicator, numeratordenom, 
            standardizeddisaggregate, otherdisaggregate,modality,
-           trendscoarse, sex,  period, period_type, value)) 
+           trendscoarse, sex,  period, period_type, value))  %>% 
+  filter(prime_partner_name=="Centre for Sexual Health and HIV/AIDS Research Zimbabwe"|
+           prime_partner_name=="ORGANIZATION FOR PUBLIC HEALTH INTERVENTIONS AND DEVELOPMENT"|
+           prime_partner_name=="Population Services International"|
+           prime_partner_name=="UNIVERSITY OF WASHINGTON"|
+           prime_partner_name=="ZIMBABWE ASSOCIATION OF CHURCH RELATED HOSPITAL"|
+           prime_partner_name=="Zimbabwe Health Interventions") 
 ## select necessary rows
 df_rows<-df_indicators %>% 
   filter(period_type=="cumulative",
@@ -149,6 +155,7 @@ tst_otherdisag <- tst_indicator_list %>%
 # other2<-tst_otherdisag %>% distinct(indicator, standardizeddisaggregate, otherdisaggregate)
 
 tst_otherdisag_group<-tst_otherdisag %>% 
+  dplyr::select(!c(period_type, modality, otherdisaggregate, standardizeddisaggregate)) %>% 
   dplyr::group_by_if(is.character) %>%
   dplyr::summarise_if(is.numeric, ~ sum(., na.rm = TRUE)) %>% 
   ungroup()
@@ -159,14 +166,15 @@ tst_otherdisag_group<-tst_otherdisag %>%
 
 # collapse by snu trends
 df_snu<- tst_otherdisag_group %>% 
-  dplyr::select(!c(psnu, period_type, modality)) %>% 
+  dplyr::select(!c(psnu)) %>% 
   dplyr::group_by_if(is.character) %>%
   dplyr::summarise_if(is.numeric, ~ sum(., na.rm = TRUE))%>% 
-  rename(value_snu1=value)
+  rename(value_snu1=value) %>% 
+  ungroup()
 
 df_psnu<-tst_otherdisag_group %>% 
-  dplyr::select(!c( period_type, modality)) %>% 
-  rename(value_psnu=value) 
+  rename(value_psnu=value) %>% 
+  ungroup()
 
 
 ##############################################################

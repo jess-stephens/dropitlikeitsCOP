@@ -23,9 +23,8 @@ datim_user_nm <- "jstephens@usaid.gov"
 datim_pwd <- getPass::getPass()
 dp_names <- get_names(dp, datim_user = datim_user_nm, datim_password = datim_pwd)
 
-
 dp_indicators<-dp_names %>% 
-  select(c( prime_partner_name, psnu,indicator, numeratordenom, 
+  select(c( prime_partner_name, psnu,indicator, numeratordenom, mech_code,
             standardizeddisaggregate, otherdisaggregate,modality,
             ageasentered, sex,  fiscal_year, targets)) 
 
@@ -40,11 +39,28 @@ dp_period <- dp_indicators %>%
   rename(period=fiscal_year, value=targets) %>% 
   select(!c(numeratordenom))
 
+# qc_tst_names<-dp_period %>%
+#   select(c(prime_partner_name, mech_code)) %>%
+#   unique()
+
+dp_mech<-dp_period %>% 
+mutate(prime_partner_name=case_when(
+  mech_code=="87685"~ "Population Services International",
+  mech_code=="87082"~ "UNIVERSITY OF WASHINGTON",
+  TRUE~prime_partner_name)) %>% 
+  select(!(mech_code)) %>% 
+  filter(prime_partner_name=="Centre for Sexual Health and HIV/AIDS Research Zimbabwe"|
+                               prime_partner_name=="ORGANIZATION FOR PUBLIC HEALTH INTERVENTIONS AND DEVELOPMENT"|
+                               prime_partner_name=="Population Services International"|
+                               prime_partner_name=="UNIVERSITY OF WASHINGTON"|
+                               prime_partner_name=="ZIMBABWE ASSOCIATION OF CHURCH RELATED HOSPITAL"|
+                               prime_partner_name=="Zimbabwe Health Interventions") 
+
 
 # rename psnu to snu1
 #change ageasentered to coarse trends
 
-dp_munge<-dp_period %>% 
+dp_munge<-dp_mech %>% 
   rename(snu1=psnu, FY24_target_snu=value)  %>% 
   filter(!is.na(ageasentered)) %>% 
     mutate(trendscoarse=ifelse(

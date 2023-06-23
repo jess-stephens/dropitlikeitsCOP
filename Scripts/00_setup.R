@@ -10,7 +10,8 @@
 ## Install Packages
 
 #From CRAN
-install.packages(c("tidyverse","readxl","reshape2", "janitor","purr", "getPass"))
+install.packages(c("tidyverse","readxl","reshape2", "janitor","purr", "getPass", "scales", "gt"))
+
 
 #From GitHub
 install.packages("remotes")
@@ -36,9 +37,13 @@ library(reshape2)
 library(janitor)
 library(getPass)
 library(purrr)
+library(scales)
+library(gt)
+
 
 library(glamr)
 library(gophr)
 library(glitr)
 library(tameDP)
+
 

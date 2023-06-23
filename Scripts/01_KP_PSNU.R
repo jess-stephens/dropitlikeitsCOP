@@ -17,28 +17,42 @@ df_kp <- data_folder %>%
   read_excel(sheet="Prevention_NonKP_Targets")
 
 
-
 #CLEAN ------------------------------------------------------------------------
 
 df_kp_clean <- df_kp %>% 
   clean_names() %>% 
   rename(prime_partner_name=partner,snu1=province, psnu=district, 
-         standardizeddisaggregate=disaggregate, FY24_target_kp=target)
+         standardizeddisaggregate=disaggregate, fy24_target_kp=target)
 
 # CLEAN PARTNER NAMES TO MATCH MSD FY22
 
 df_kp_clean2<-df_kp_clean %>% 
   mutate(prime_partner_name=case_when(
     prime_partner_name=="CesHHAR"~ "Centre for Sexual Health and HIV/AIDS Research Zimbabwe",
+    prime_partner_name=="CeSHHAR"~ "Centre for Sexual Health and HIV/AIDS Research Zimbabwe",
     prime_partner_name=="Mavambo"~ "Mavambo Orphan Care",
     prime_partner_name=="OPHID"~ "ORGANIZATION FOR PUBLIC HEALTH INTERVENTIONS AND DEVELOPMENT",
     prime_partner_name=="Prevent"~ "Population Services International",
     prime_partner_name=="CLINICAL IP TBD"~ "UNIVERSITY OF WASHINGTON",
     prime_partner_name=="ZACH"~ "ZIMBABWE ASSOCIATION OF CHURCH RELATED HOSPITAL",
     prime_partner_name=="ZHI ACCE"~ "Zimbabwe Health Interventions",
-    TRUE~prime_partner_name))
+    prime_partner_name=="Bantwana"~ "BANTWANA ZIMBABWE",
+    TRUE~prime_partner_name)) %>% 
+  filter(prime_partner_name=="Centre for Sexual Health and HIV/AIDS Research Zimbabwe"|
+           prime_partner_name=="ORGANIZATION FOR PUBLIC HEALTH INTERVENTIONS AND DEVELOPMENT"|
+         prime_partner_name=="Population Services International"|
+         prime_partner_name=="UNIVERSITY OF WASHINGTON"|
+         prime_partner_name=="ZIMBABWE ASSOCIATION OF CHURCH RELATED HOSPITAL"|
+         prime_partner_name=="Zimbabwe Health Interventions") %>% 
+  filter(!is.na(psnu))
 
 #MUNGE ------------------------------------------------------------------------
+# df_kp_clean3 %>% 
+#   dplyr::select(c( fy24_target_kp)) %>% 
+#   dplyr::group_by_if(is.character) %>%
+#   dplyr::summarise_if(is.numeric, ~ sum(., na.rm = TRUE))%>% 
+#   ungroup()
+#458837
 
 #change ageasentered to coarse trends
 df_kp_munge<-df_kp_clean2 %>% 
@@ -104,12 +118,13 @@ df_kp_snu<- df_kp_munge_collapse %>%
   dplyr::select(!c(psnu, agency)) %>% 
   dplyr::group_by_if(is.character) %>%
   dplyr::summarise_if(is.numeric, ~ sum(., na.rm = TRUE))%>% 
-  rename(fy24_target_snu_kp=FY24_target_kp) %>% 
-  ungroup()
+  rename(fy24_target_snu_kp=fy24_target_kp) %>% 
+  ungroup() 
 
 # rename target in psnu file 
-df_kp_psnu<-df_kp_munge_collapse %>% 
-  rename(fy24_target_psnu_kp=FY24_target_kp)
+df_kp_psnu<-df_kp_munge_collapse %>%   
+  dplyr::select(!c( agency)) %>% 
+  rename(fy24_target_psnu_kp=fy24_target_kp)
 
 
 ##############################################################
@@ -132,7 +147,8 @@ df_kp_ratio<-df_kp_wide %>%
 #EXPORT ------------------------------------------------------------------------
 
 today <- lubridate::today()
-  
+write_csv(df_kp_ratio, glue::glue("Dataout/df_kp_ratio_{today}.csv" ))
+
 write_csv(df_kp_snu, glue::glue("Dataout/df_kp_snu_join_{today}.csv" ))
 
 # write_csv(df_kp_ratio, glue::glue("Dataout/df_kp_ratio_{today}.csv" ))
