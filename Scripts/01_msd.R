@@ -19,9 +19,9 @@ tst_indicators <- data_folder %>%
   return_latest("tst_disags_mapping.xlsx") %>% 
   read_excel(sheet="standarddisag")
 
-otherdisag <- data_folder %>% 
-  return_latest("tst_disags_mapping.xlsx") %>% 
-  read_excel(sheet="otherdisag", na="NA")
+# otherdisag <- data_folder %>% 
+#   return_latest("tst_disags_mapping.xlsx") %>% 
+#   read_excel(sheet="otherdisag", na="NA")
 # ^^^ issues using, leading to manual entry
 
 age_map <- data_folder %>% 
@@ -35,12 +35,13 @@ age_map <- data_folder %>%
 df_reshape<- reshape_msd(df, qtrs_keep_cumulative = TRUE)
 names(df_reshape)
 
+## QUICK CHECKS
 # test<-df_reshape %>%
 #     distinct(prime_partner_name, mech_code,mech_name)
 
 
 #minimize size
-##select necessary indicators
+##select necessary variables
 df_indicators<-df_reshape %>% 
   select(c( prime_partner_name, snu1, psnu,indicator, numeratordenom, 
            standardizeddisaggregate, otherdisaggregate,modality,
@@ -92,6 +93,7 @@ tst_indicator_list<-df_rows_nd %>%
 #########################################################################
 #map to TST other disaggregrates
 #########################################################################
+
 # Collapse across standdardized disaggregates to removed otherdisaggregates
 # #can change otherdisaggregate to na then group all afterwards
 # CXCA_SCRN
@@ -163,6 +165,7 @@ tst_otherdisag_group<-tst_otherdisag %>%
 
 ##############################################################
 # CREATE SECONDARY DF BY SNU TO JOIN TO PSNU DF
+##############################################################
 
 # collapse by snu trends
 df_snu<- tst_otherdisag_group %>% 
@@ -179,7 +182,7 @@ df_psnu<-tst_otherdisag_group %>%
 
 ##############################################################
 # JOIN SNU COLUMN BACK TO DF_PSNU
-
+##############################################################
 df_wide<- left_join(
   df_psnu, df_snu)
   
